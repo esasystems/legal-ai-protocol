@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>פרוטוקול-AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700&family=Heebo:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{color-scheme:light;--navy:#0f2342;--navy2:#1b3558;--gray:#6b7380;--line:#e3e6eb;--bg:#f5f6f8;--card:#fff;--text:#1c2430;--green:#1e8a5a;--soft:#eef2f8;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Heebo,Arial,sans-serif;line-height:1.6}
+header{background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 1px 4px rgba(15,35,66,.05)}
+.bar{max-width:1120px;margin:auto;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-family:'Frank Ruhl Libre',serif;font-size:28px;font-weight:700;color:var(--navy);letter-spacing:.5px}
+.secure{color:var(--green);font-weight:500;font-size:15px;display:flex;align-items:center;gap:8px}
+.secure i{width:9px;height:9px;border-radius:50%;background:var(--green);display:inline-block}
+main{max-width:1120px;margin:auto;padding:40px 24px 64px}
+h1{font-family:'Frank Ruhl Libre',serif;font-size:34px;color:var(--navy);margin:0 0 8px;text-align:center}
+.sub{text-align:center;color:var(--gray);margin:0 0 28px}
+.drop{background:var(--card);border:2px dashed var(--navy2);border-radius:14px;padding:48px 24px;box-shadow:0 1px 3px rgba(15,35,66,.06);text-align:center;cursor:pointer;transition:background .2s,border-color .2s}
+.drop:hover,.drop.over,.drop:focus-visible{background:var(--soft);outline:none;border-color:var(--navy)}
+.icons{display:flex;justify-content:center;align-items:center;gap:18px;margin-bottom:16px;color:var(--navy)}
+.icons svg{width:52px;height:52px;stroke:currentColor;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.icons .mic{width:38px;height:38px;color:var(--gray)}
+.icons .sep{width:1px;height:36px;background:var(--line)}
+.drop strong{display:block;font-size:21px;font-weight:600;color:var(--navy);max-width:640px;margin:0 auto 6px}
+.drop span{color:var(--gray);font-size:14px}
+.prog{display:none;margin:22px auto 0;max-width:520px;text-align:right}
+.prog.on{display:block}
+.prog .lbl{display:flex;justify-content:space-between;font-size:14px;color:var(--navy);margin-bottom:8px;font-weight:500}
+.track{height:10px;background:var(--line);border-radius:6px;overflow:hidden}
+.fill{height:100%;width:0;background:linear-gradient(270deg,var(--navy2),var(--green));border-radius:6px;transition:width .3s}
+.fname{font-size:13px;color:var(--gray);margin-top:8px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:32px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(15,35,66,.06),0 6px 20px rgba(15,35,66,.05)}
+h2{font-family:'Frank Ruhl Libre',serif;font-size:22px;color:var(--navy);margin:0 0 16px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:right;color:var(--gray);font-weight:500;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:11px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{color:var(--navy);font-weight:600;white-space:nowrap}
+ol{margin:0;padding:0 20px 0 0}
+li{padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+li:last-child{border:0}
+td.pri span{display:inline-block;padding:1px 10px;border-radius:10px;font-size:12.5px;background:var(--soft);color:var(--navy)}
+td.pri span.hi{background:var(--navy);color:var(--card)}
+.empty{color:var(--gray);text-align:center;padding:28px 8px;font-size:14.5px;border:1px dashed var(--line);border-radius:10px}
+.demo{display:none;font-size:12.5px;color:var(--gray);margin:0 0 12px}
+.q{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px;animation:in .35s ease both}
+.q:last-child{margin-bottom:0}
+.q b{display:inline-block;font-size:12.5px;font-weight:500;color:var(--green);margin-bottom:4px}
+.q p{margin:0 0 6px;font-size:15.5px;font-weight:500;color:var(--text)}
+.q small{color:var(--gray);font-size:13px}
+tbody tr{animation:in .35s ease both}
+@keyframes in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.q,tbody tr{animation:none}}
+.hr{display:flex;align-items:center;gap:18px}
+.setbtn{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);color:var(--navy);padding:7px 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
+.setbtn:hover,.setbtn:focus-visible{background:var(--soft);outline:2px solid var(--navy2);outline-offset:1px}
+.setbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.setbtn.ok::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+.note{display:none;margin-top:18px;padding:14px 18px;border-radius:10px;background:var(--soft);border:1px solid var(--line);color:var(--text);font-size:15px;text-align:right}
+.note.on{display:block}
+.note.err{border-color:#c0392b}
+.note button{margin-top:8px;display:block}
+dialog{border:0;border-radius:14px;padding:0;max-width:480px;width:calc(100% - 32px);background:var(--card);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,20,40,.55)}
+.mb{padding:26px}
+.mb h3{font-family:'Frank Ruhl Libre',serif;font-size:22px;color:var(--navy);margin:0 0 6px}
+.mb p{margin:0 0 14px;color:var(--gray);font-size:14px}
+.mb label{display:block;font-weight:500;font-size:14px;margin-bottom:6px}
+.mb input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;direction:ltr;text-align:left;background:var(--bg);color:var(--text)}
+.mb input:focus{outline:2px solid var(--navy2)}
+.prov{font-size:13px;color:var(--green);min-height:20px;margin-top:6px}
+.warn{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);margin:14px 0}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;border:1px solid var(--navy2);background:var(--navy);color:var(--card);font:inherit;font-weight:500;cursor:pointer}
+.btn.g{background:none;color:var(--navy)}
+.btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+footer{text-align:center;color:var(--gray);font-size:13px;padding:0 24px 32px}
+[hidden]{display:none!important}
+.hr{flex-wrap:wrap}.hr .btn{padding:7px 14px;font-size:14px}
+a.btn{display:inline-block;text-decoration:none;text-align:center}
+.btn.gold{background:linear-gradient(#ffd54a,#e9a400);color:#1c2430;border:1px solid #b8860b;font-weight:700}
+.btn.gold:hover{filter:brightness(1.07)}
+.btn.xl{display:block;width:100%;padding:16px 20px;font-size:18px;border-radius:10px}
+.plan{font-size:13.5px;padding:3px 12px;border-radius:12px;background:var(--soft);color:var(--navy);font-weight:500}
+.plan.low{background:#c0392b;color:#fff}
+.who{font-size:14px;color:var(--gray)}
+/* מסך פתיחה */
+#gate{position:fixed;inset:0;z-index:1000;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;
+background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);transition:opacity .6s ease,transform .6s ease}
+#gate.out{opacity:0;transform:scale(1.03);pointer-events:none}
+.gbox{width:100%;max-width:620px;text-align:center}
+.glock{width:64px;height:64px;stroke:#d4af37;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:10px}
+.gtag{color:#d4af37;font-size:14px;letter-spacing:.5px;margin-bottom:14px;display:flex;justify-content:center;align-items:center;gap:8px}
+.gtag i{width:8px;height:8px;border-radius:50%;background:#d4af37;display:inline-block}
+#gate h1{color:#fff;font-size:clamp(26px,5vw,40px);line-height:1.3;margin:0 0 12px}
+#gate h1 span{color:#d4af37}
+.gsub{font-size:clamp(16px,2.6vw,19px);color:#e8dcb0;margin:0 0 26px}
+.gform{background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.45);border-radius:16px;padding:26px;text-align:right;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.gtabs{display:flex;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.18)}
+.gtabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;color:#b9c4d6;font:inherit;font-size:16px;padding:10px;cursor:pointer;margin-bottom:-1px}
+.gtabs button.on{color:#d4af37;border-bottom-color:#d4af37;font-weight:600}
+.gfld{margin-bottom:16px}.gfld label{display:block;font-size:14px;margin-bottom:6px;color:#e8dcb0}
+.gfld input{width:100%;padding:13px 14px;border-radius:9px;border:1px solid rgba(212,175,55,.5);background:rgba(5,13,28,.6);color:#fff;font:inherit;font-size:16px}
+.gfld input:focus{outline:2px solid #d4af37;outline-offset:1px}
+#gMail,#gPass{direction:ltr;text-align:left}
+.ghint{font-size:13px;color:#b9c4d6;margin-top:6px}
+.gerr{min-height:22px;color:#ff9b8f;font-size:14px;margin-bottom:6px}
+.gfoot{margin-top:18px;font-size:13px;color:#8fa0bb}
+/* חלון מכסה ותמחור: שחור וזהב */
+#limD{max-width:900px;background:#0b0b0b;color:#f3e9c8;border:1px solid #d4af37;box-shadow:0 20px 70px rgba(0,0,0,.7)}
+#limD .mb{padding:30px;position:relative;max-height:90vh;overflow:auto}
+#limD .x{position:absolute;top:12px;left:14px;background:none;border:0;color:#d4af37;font-size:30px;line-height:1;cursor:pointer;padding:4px 10px}
+#limD .x:focus-visible{outline:2px solid #d4af37}
+#limD h3{color:#e6c35c;font-size:28px;text-align:center;margin:0 0 8px}
+#limD .big{font-size:17px;line-height:1.8;color:#f3e9c8;text-align:center;margin:0 auto 24px;max-width:640px}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+.pc{position:relative;border:1px solid rgba(212,175,55,.35);border-radius:14px;padding:28px 22px 22px;background:#141414;display:flex;flex-direction:column}
+.pc.best{border:2px solid #d4af37;background:linear-gradient(#1d1809,#111);box-shadow:0 0 34px rgba(212,175,55,.16)}
+.pc h4{margin:0 0 10px;font-size:19px;color:#fff;font-weight:600}
+.pc .amt{font-family:'Frank Ruhl Libre',serif;font-size:44px;color:#e6c35c;line-height:1.1}
+.pc .amt small{font-family:Heebo,Arial,sans-serif;font-size:16px;color:#cfc29a}
+.pc .bill{font-size:14px;color:#b9ad85;min-height:22px;margin:2px 0 16px}
+.pc ul{list-style:none;margin:0 0 24px;padding:0;flex:1}
+.pc li{border:0;padding:8px 0;font-size:15px;color:#f3e9c8;display:flex;gap:10px;align-items:flex-start}
+.pc li::before{content:"\2713";color:#d4af37;font-weight:700}
+.pc .badge{position:absolute;top:-13px;right:50%;transform:translateX(50%);background:#d4af37;color:#1c2430;font-size:13px;font-weight:700;padding:3px 14px;border-radius:12px;white-space:nowrap}
+.btn.line{background:none;color:#e6c35c;border:1px solid #d4af37;font-weight:600}
+.btn.line:hover{background:rgba(212,175,55,.12)}
+@media(max-width:700px){.plans{grid-template-columns:1fr}#limD .mb{padding:22px 16px}}
+/* עזרה בהגדרות */
+.lrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.lrow label{margin:0}
+.help{background:none;border:1px solid var(--line);color:var(--navy);border-radius:14px;padding:2px 12px;font:inherit;font-size:13px;cursor:pointer}
+.help:hover,.help:focus-visible{background:var(--soft);outline:2px solid var(--navy2);outline-offset:1px}
+.guide{max-width:560px}.guide #helpBody{font-size:15px;line-height:1.8;margin-bottom:18px}
+@media(prefers-reduced-motion:reduce){.q,tbody tr{animation:none}}
+.hr{display:flex;align-items:center;gap:18px}
+.setbtn{display:inline-flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);color:var(--navy);padding:7px 14px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
+.setbtn:hover,.setbtn:focus-visible{background:var(--soft);outline:2px solid var(--navy2);outline-offset:1px}
+.setbtn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.setbtn.ok::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+.note{display:none;margin-top:18px;padding:14px 18px;border-radius:10px;background:var(--soft);border:1px solid var(--line);color:var(--text);font-size:15px;text-align:right}
+.note.on{display:block}
+.note.err{border-color:#c0392b}
+.note button{margin-top:8px;display:block}
+dialog{border:0;border-radius:14px;padding:0;max-width:480px;width:calc(100% - 32px);background:var(--card);color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,20,40,.55)}
+.mb{padding:26px}
+.mb h3{font-family:'Frank Ruhl Libre',serif;font-size:22px;color:var(--navy);margin:0 0 6px}
+.mb p{margin:0 0 14px;color:var(--gray);font-size:14px}
+.mb label{display:block;font-weight:500;font-size:14px;margin-bottom:6px}
+.mb input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:8px;font:inherit;direction:ltr;text-align:left;background:var(--bg);color:var(--text)}
+.mb input:focus{outline:2px solid var(--navy2)}
+.prov{font-size:13px;color:var(--green);min-height:20px;margin-top:6px}
+.warn{background:var(--soft);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--text);margin:14px 0}
+.acts{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:10px 20px;border-radius:8px;border:1px solid var(--navy2);background:var(--navy);color:var(--card);font:inherit;font-weight:500;cursor:pointer}
+.btn.g{background:none;color:var(--navy)}
+.btn:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+footer{text-align:center;color:var(--gray);font-size:13px;padding:0 24px 32px}
+[hidden]{display:none!important}
+.hr{flex-wrap:wrap}.hr .btn{padding:7px 14px;font-size:14px}
+a.btn{display:inline-block;text-decoration:none;text-align:center}
+.btn.gold{background:linear-gradient(#ffd54a,#e9a400);color:#1c2430;border:1px solid #b8860b;font-weight:700}
+.btn.gold:hover{filter:brightness(1.07)}
+.btn.xl{display:block;width:100%;padding:16px 20px;font-size:18px;border-radius:10px}
+.plan{font-size:13.5px;padding:3px 12px;border-radius:12px;background:var(--soft);color:var(--navy);font-weight:500}
+.plan.low{background:#c0392b;color:#fff}
+.who{font-size:14px;color:var(--gray)}
+/* מסך פתיחה */
+#gate{position:fixed;inset:0;z-index:1000;overflow:auto;display:flex;align-items:center;justify-content:center;padding:24px;color:#fff;
+background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);transition:opacity .6s ease,transform .6s ease}
+#gate.out{opacity:0;transform:scale(1.03);pointer-events:none}
+.gbox{width:100%;max-width:620px;text-align:center}
+.glock{width:64px;height:64px;stroke:#d4af37;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:10px}
+.gtag{color:#d4af37;font-size:14px;letter-spacing:.5px;margin-bottom:14px;display:flex;justify-content:center;align-items:center;gap:8px}
+.gtag i{width:8px;height:8px;border-radius:50%;background:#d4af37;display:inline-block}
+#gate h1{color:#fff;font-size:clamp(26px,5vw,40px);line-height:1.3;margin:0 0 12px}
+#gate h1 span{color:#d4af37}
+.gsub{font-size:clamp(16px,2.6vw,19px);color:#e8dcb0;margin:0 0 26px}
+.gform{background:rgba(255,255,255,.05);border:1px solid rgba(212,175,55,.45);border-radius:16px;padding:26px;text-align:right;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.gtabs{display:flex;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.18)}
+.gtabs button{flex:1;background:none;border:0;border-bottom:3px solid transparent;color:#b9c4d6;font:inherit;font-size:16px;padding:10px;cursor:pointer;margin-bottom:-1px}
+.gtabs button.on{color:#d4af37;border-bottom-color:#d4af37;font-weight:600}
+.gfld{margin-bottom:16px}.gfld label{display:block;font-size:14px;margin-bottom:6px;color:#e8dcb0}
+.gfld input{width:100%;padding:13px 14px;border-radius:9px;border:1px solid rgba(212,175,55,.5);background:rgba(5,13,28,.6);color:#fff;font:inherit;font-size:16px}
+.gfld input:focus{outline:2px solid #d4af37;outline-offset:1px}
+#gMail,#gPass{direction:ltr;text-align:left}
+.ghint{font-size:13px;color:#b9c4d6;margin-top:6px}
+.gerr{min-height:22px;color:#ff9b8f;font-size:14px;margin-bottom:6px}
+.gfoot{margin-top:18px;font-size:13px;color:#8fa0bb}
+/* חלון מכסה: שחור וזהב */
+#limD{max-width:540px;background:#0b0b0b;color:#f3e9c8;border:1px solid #d4af37;box-shadow:0 20px 70px rgba(0,0,0,.7)}
+#limD h3{color:#e6c35c;font-size:26px}
+#limD .big{font-size:18px;line-height:1.8;color:#f3e9c8;margin:0 0 22px}
+#limD .gl{width:46px;height:46px;stroke:#d4af37;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;margin-bottom:8px}
+#limD .btn.g{margin-top:10px;width:100%;color:#e8dcb0;border-color:rgba(212,175,55,.5)}
+@media(prefers-reduced-motion:reduce){#gate{transition:none}}
+@media(max-width:820px){.cols{grid-template-columns:1fr}h1{font-size:27px}}
+/* קישורי מעבר בין מסכי הזדהות */
+.glinks{margin-bottom:12px}.glink{background:none;border:0;color:#d4af37;font:inherit;font-size:14px;text-decoration:underline;cursor:pointer;padding:0}
+/* חלון תשלום: שחור וזהב */
+#payD{max-width:540px;background:#0b0b0b;color:#f3e9c8;border:1px solid #d4af37;box-shadow:0 20px 70px rgba(0,0,0,.7)}
+#payD .mb{padding:28px;position:relative}
+#payD h3{color:#e6c35c;font-size:26px;text-align:center}
+#payD .big{text-align:center;color:#f3e9c8;font-size:16px;line-height:1.8;margin:0 0 14px}
+#payD .x{position:absolute;top:12px;left:14px;background:none;border:0;color:#d4af37;font-size:30px;line-height:1;cursor:pointer;padding:4px 10px}
+#payD .gfld label{color:#e8dcb0}
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+#lPhone,#lMail{direction:ltr;text-align:left}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid rgba(28,36,48,.3);border-top-color:#1c2430;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px;margin-left:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.paok{text-align:center}.paok .tick{font-size:54px;color:#d4af37;line-height:1.2}
+#payD .pinfo{text-align:center;color:#d4af37;font-weight:600;font-size:15px;margin:4px 0 18px;padding:8px 12px;border:1px solid rgba(212,175,55,.45);border-radius:10px;background:rgba(212,175,55,.08)}
+#payD h3{line-height:1.4;margin-top:6px}
+</style>
+</head>
+<body>
+<header><div class="bar">
+<div class="logo">פרוטוקול-AI</div>
+<div class="hr"><div class="secure"><i></i>מערכת מאובטחת וחסויה</div>
+<span class="who" id="who"></span>
+<span class="plan" id="usage"></span>
+<button class="btn gold" id="upBtn" type="button">שדרוג למנוי פרימיום</button>
+<button class="setbtn" id="setBtn" type="button"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>הגדרות</button><button class="setbtn" id="outBtn" type="button">התנתקות</button></div>
+</div></header>
+<main>
+<h1>ניתוח פרוטוקולים והקלטות דיון</h1>
+<p class="sub">העלו חומר מהדיון וקבלו ציר זמן ושאלות לחקירה נגדית</p>
+
+<div class="drop" id="drop" tabindex="0" role="button" aria-label="העלאת קובץ">
+<div class="icons" aria-hidden="true">
+<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+<div class="sep"></div>
+<svg class="mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>
+<svg class="mic" viewBox="0 0 24 24"><path d="M3 12h2M7 8v8M11 4v16M15 8v8M19 10v4M21 12h0"/></svg>
+</div>
+<strong>גרור לכאן פרוטוקול דיון, תמליל או קובץ שמע (PDF, Word, MP3, WAV, M4A)</strong>
+<span>או לחצו לבחירת קובץ מהמחשב</span>
+<div class="prog" id="prog" aria-live="polite">
+<div class="lbl"><span id="stage">מתמלל ומנתח את השמע…</span><span id="pct">0%</span></div>
+<div class="track"><div class="fill" id="fill"></div></div>
+<div class="fname" id="fname"></div>
+</div>
+<input type="file" id="file" hidden accept=".pdf,.doc,.docx,.mp3,.wav,.m4a,audio/*">
+</div>
+
+<div class="note" id="note" role="status"></div>
+<div class="cols">
+<section class="card">
+<h2>ציר זמן של הדיון</h2>
+<p class="demo" id="demoTl">ניתוח אוטומטי של בינה מלאכותית. יש לאמת מול המקור לפני שימוש.</p>
+<div class="scroll"><table>
+<thead><tr><th>מיקום</th><th>דובר</th><th>אירוע</th><th>חשיבות</th></tr></thead>
+<tbody id="tl"></tbody></table></div>
+<div class="empty" id="tlEmpty">העלו קובץ כדי לראות את ציר הזמן של הדיון</div>
+</section>
+<section class="card">
+<h2>בנק שאלות לחקירה הנגדית</h2>
+<div id="qs"></div>
+<div class="empty" id="qsEmpty">העלו קובץ כדי לקבל שאלות לחקירה נגדית</div>
+</section>
+</div>
+</main>
+<footer>הקבצים נשלחים לניתוח אצל ספק ה-AI (Google Gemini).</footer>
+<dialog id="dlg"><div class="mb">
+<h3>הגדרות</h3>
+<p>הזינו את קוד הגישה (APP_TOKEN) שהוגדר בשרת. מפתחות ה-AI עצמם נשמרים בשרת בלבד.</p>
+<div class="lrow"><label for="key">קוד גישה</label><button class="help" id="helpBtn" type="button">? מדריך הנפקת מפתח API</button></div>
+<input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="APP_TOKEN">
+<div class="prov" id="prov"></div>
+<div class="warn">הקוד נשמר ב-LocalStorage של הדפדפן ללא הצפנה. אל תשתמשו בו במחשב משותף. תמלול שמע דורש מפתח OpenAI בשרת.</div>
+<div class="acts"><button class="btn" id="save" type="button">שמירה</button><button class="btn g" id="del" type="button">מחיקת המפתח</button><button class="btn g" id="cls" type="button">סגירה</button></div>
+</div></dialog>
+
+<div id="gate" role="dialog" aria-modal="true" aria-labelledby="gT"><div class="gbox">
+<svg class="glock" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10.5" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5M12 14.5v3"/></svg>
+<div class="gtag"><i></i>מערכת מאובטחת וחסויה</div>
+<h1 id="gT"><span>פרוטוקול-AI</span> - סביבת עבודה משפטית מסווגת</h1>
+<p class="gsub">הירשם כעת וקבל 3 קבצים ראשונים לניתוח ללא עלות</p>
+<form class="gform" id="gF" novalidate>
+<div class="gtabs" role="tablist"><button type="button" id="tReg" class="on">הרשמה</button><button type="button" id="tLog">התחברות</button></div>
+<div class="gfld" id="nameF"><label for="gName">שם מלא</label><input id="gName" type="text" autocomplete="name"></div>
+<div class="gfld"><label for="gMail">דוא"ל</label><input id="gMail" type="email" autocomplete="email" spellcheck="false"></div>
+<div class="gfld" id="passF"><label for="gPass">סיסמה</label><input id="gPass" type="password" autocomplete="current-password" spellcheck="false"><div class="ghint" id="pHint">הסיסמה חייבת להכיל לפחות 8 תווים, אותיות ומספרים</div></div>
+<div class="gerr" id="gErr" role="alert"></div>
+<div class="glinks"><button type="button" class="glink" id="forgotL" hidden>שכחתי סיסמה?</button><button type="button" class="glink" id="backL" hidden>חזרה להתחברות</button></div>
+<button class="btn gold xl" id="gSubmit" type="submit">כניסה למערכת</button>
+</form>
+<div class="gfoot">הגישה מיועדת לאנשי מקצוע בתחום המשפט.</div>
+</div></div>
+
+<dialog id="limD" aria-labelledby="prT"><div class="mb">
+<button class="x" id="limC" type="button" aria-label="סגירה">&times;</button>
+<h3 id="prT">תמחור ומנויים</h3>
+<p class="big" id="limMsg">הגעת למכסת הניתוחים החינמית שלך בגרסת הניסיון. כדי להמשיך לעבוד ללא הגבלה, אנא שדרג למנוי פרימיום.</p>
+<div class="plans">
+<section class="pc"><h4>מסלול פרימיום חודשי</h4>
+<div class="amt">₪249<small> / לחודש</small></div><div class="bill">&nbsp;</div>
+<ul><li>חיוב חודשי מתחדש ללא התחייבות</li><li>ניתוח פרוטוקולים והקלטות ללא הגבלה</li><li>תמיכה מלאה בקבצי שמע (MP3, WAV ועוד)</li><li>ארכיטקטורת אבטחה חסויה מקצה לקצה</li><li>תמיכה טכנית מועדפת במייל ובצ'אט</li></ul>
+<button class="btn line xl" id="payM" type="button">שדרוג למסלול חודשי</button></section>
+<section class="pc best"><span class="badge">המשתלם ביותר</span><h4>מסלול פרימיום שנתי</h4>
+<div class="amt">₪199<small> / לחודש</small></div><div class="bill">בחיוב שנתי של ₪2,388</div>
+<ul><li>חיסכון של 20% בעלות השנתית</li><li>ניתוח פרוטוקולים והקלטות ללא הגבלה</li><li>תמיכה מלאה בקבצי שמע (MP3, WAV ועוד)</li><li>ארכיטקטורת אבטחה חסויה מקצה לקצה</li><li>תמיכה טכנית מועדפת במייל ובצ'אט</li></ul>
+<button class="btn gold xl" id="payY" type="button">שדרוג למסלול שנתי וחיסכון</button></section>
+</div></div></dialog>
+<dialog id="payD" aria-labelledby="payT"><div class="mb">
+<button class="x" id="payX" type="button" aria-label="סגירה">&times;</button>
+<div id="payForm">
+<h3 id="payT">הצטרפות לרשימת ההמתנה האקסקלוסיבית לפרימיום</h3>
+<p class="big">מפאת רגישות המידע, סיווג הנתונים והביקוש הגבוה לשירות פרוטוקול-AI, אנו מצרפים משרדי עורכי דין לגרסת הפרימיום הבלתי-מוגבלת בצורה מדורגת ומבוקרת.</p>
+<p class="big">השאירו את פרטיכם כאן כדי לשריין את מקומכם ולקבל עדיפות בפתיחת החשבון ומחיר השקה מיוחד מול נציג.</p>
+<div class="pinfo" id="payInfo"></div>
+<form id="leadF" name="premium-lead" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+<input type="hidden" name="form-name" value="premium-lead"><input type="hidden" name="plan" id="lPlan"><p hidden><label>אל תמלאו: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
+<div class="gfld"><label for="lName">שם מלא</label><input id="lName" name="name" type="text" autocomplete="name" required></div>
+<div class="gfld"><label for="lPhone">מספר טלפון</label><input id="lPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></div>
+<div class="gfld"><label for="lMail">אימייל</label><input id="lMail" name="email" type="email" autocomplete="email" spellcheck="false" required></div>
+<div class="gerr" id="cErr" role="alert"></div>
+<button class="btn gold xl" id="payGo" type="submit">שריין לי מקום בפרימיום</button>
+</form></div>
+<div class="paok" id="paySuccess" hidden><div class="tick">&#10003;</div><h3>מקומך שוריין בהצלחה!</h3><p class="big">נציג טכני יצור עמך קשר בהקדם לאימות הפרופיל ופתיחת הגישה.</p><button class="btn gold xl" id="payDone" type="button">סגירה</button></div>
+</div></dialog>
+<dialog id="helpD"><div class="mb guide">
+<h3>מדריך הנפקת מפתח API</h3>
+<div id="helpBody"><!-- הדביקו כאן את תוכן המדריך (HTML או טקסט) --><p>תוכן המדריך יתווסף כאן.</p></div>
+<div class="acts"><button class="btn" id="helpC" type="button">סגירה</button></div>
+</div></dialog>
+
+<script>
+/* ===== ניתוח דרך Netlify Function =====
+   הדפדפן לא מחזיק שום מפתח Gemini. הקובץ נשלח לפונקציה /.netlify/functions/analyze-protocol יחד עם
+   אסימון ההתחברות של Supabase. הפונקציה מאמתת את המשתמש, בודקת פרימיום ומכסה, קוראת ל-Gemini ומעדכנת את המונה. */
+const ANALYZE_URL = '/.netlify/functions/analyze-protocol';
+const SUPABASE_URL = 'https://saydqlceufnczywjjuwh.supabase.co';
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0";
+/* אם המפתחות נשארו כברירת מחדל -> סימולציה מקומית (ללא פניות רשת). אחרת -> חיבור אמיתי ל-Supabase. */
+const CLOUD = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
+let sb = null;
+if (CLOUD && window.supabase && window.supabase.createClient) {
+  try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error('Supabase init failed:', e); }
+} else { console.warn('מצב סימולציה מקומית פעיל (לא הוזנו מפתחות Supabase).'); }
+
+const drop=document.getElementById('drop'),input=document.getElementById('file'),prog=document.getElementById('prog'),
+fill=document.getElementById('fill'),pct=document.getElementById('pct'),stage=document.getElementById('stage'),fname=document.getElementById('fname');
+const isAudio=f=>/\.(mp3|wav|m4a)$/i.test(f.name)||(f.type||'').startsWith('audio/');
+const $=id=>document.getElementById(id),note=$('note'),dlg=$('dlg'),keyIn=$('key'),KS='protocolai_token';
+const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const getKey=()=>{try{return localStorage.getItem(KS)||''}catch(e){return ''}};
+function say(html,err){note.innerHTML=html;note.className='note on'+(err?' err':'')}
+function syncBtn(){$('setBtn').classList.toggle('ok',!!getKey())}
+function needKey(){say('אנא הגדר קוד גישה בכפתור ההגדרות כדי להתחיל בניתוח הקובץ<button class="btn" type="button" id="goSet">פתיחת ההגדרות</button>');$('goSet').onclick=openSet}
+function openSet(){keyIn.value=getKey();$('prov').textContent='';dlg.showModal();keyIn.focus()}
+$('setBtn').onclick=openSet;$('cls').onclick=()=>dlg.close();
+$('save').onclick=()=>{const k=keyIn.value.trim();if(k.length<8){$('prov').textContent='יש להזין קוד גישה תקין';return}
+ try{localStorage.setItem(KS,k)}catch(e){$('prov').textContent='הדפדפן אינו מאפשר שמירה';return}
+ syncBtn();dlg.close();say('הקוד נשמר. אפשר להעלות קובץ.')};
+$('del').onclick=()=>{try{localStorage.removeItem(KS)}catch(e){}keyIn.value='';$('prov').textContent='';syncBtn()};
+syncBtn();
+/* ===== הגדרות מסחריות =====
+   FREE: מספר ניתוחים חינמיים. עם Supabase המכסה נאכפת בשרת (פונקציית Netlify + טבלת profiles). מונה LocalStorage משמש רק לסימולציה מקומית. */
+const CFG={FREE:3},UK='protocolai_usage',GK='protocolai_profile',PK='protocolai_premium:';
+let curEmail='',curName='';
+let mem=0;
+const lsGet=k=>{try{return localStorage.getItem(k)}catch(e){return null}},lsSet=(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}};
+let P=null; /* פרופיל מ-Supabase: {prem,count}. בסימולציה מקומית נשאר null */
+const used=()=>sb?(P?P.count:0):Math.max(mem,parseInt(lsGet(UK),10)||0),
+isPrem=()=>sb?!!(P&&P.prem):!!lsGet(PK+curEmail),blocked=()=>!isPrem()&&used()>=CFG.FREE;
+function usage(){const u=$('usage'),pr=isPrem();u.textContent=pr?(sb?'מנוי פרימיום':'מנוי פרימיום: '+lsGet(PK+curEmail)):`ניתוחים חינמיים: ${Math.min(used(),CFG.FREE)}/${CFG.FREE}`;u.className='plan'+(!pr&&blocked()?' low':'');$('upBtn').hidden=pr}
+function bump(){mem=used()+1;lsSet(UK,String(mem));usage()} /* סימולציה מקומית בלבד. ב-Supabase המונה מתעדכן בשרת */
+/* קריאת הפרופיל של המשתמש המחובר מהטבלה profiles. הקריאה לקריאה בלבד: העדכון נעשה אך ורק בפונקציית השרת. */
+async function loadProfile(){
+  if(!sb)return;
+  try{
+    const{data:{session}}=await sb.auth.getSession();
+    if(!session){P=null;return}
+    const{data,error}=await sb.from('profiles').select('is_premium,usage_count').eq('id',session.user.id).maybeSingle();
+    if(error)throw error;
+    P={prem:!!(data&&data.is_premium),count:(data&&data.usage_count)||0}
+  }catch(x){console.error('profile',x);if(!P)P={prem:false,count:0}}
+  usage()}
+function openLimit(){$('limMsg').hidden=!blocked();$('limD').showModal()}
+$('payM').onclick=()=>openPay('חודשי',249);$('payY').onclick=()=>openPay('שנתי',2388);
+$('upBtn').onclick=openLimit;$('limC').onclick=()=>$('limD').close();
+$('helpBtn').onclick=()=>$('helpD').showModal();$('helpC').onclick=()=>$('helpD').close();usage();
+
+/* ===== מסך פתיחה (הרשמה / התחברות) ===== */
+const gate=$('gate'),ws=[...document.querySelectorAll('header,main,footer')];
+const prof=()=>{try{return JSON.parse(lsGet(GK))}catch(e){return null}};
+let gm='reg';
+ws.forEach(e=>e.inert=true);
+function gUI(){const r=gm==='reg',f=gm==='forgot';$('tReg').classList.toggle('on',r);$('tLog').classList.toggle('on',gm==='log');$('nameF').hidden=!r;$('passF').hidden=f;$('pHint').hidden=!r;$('forgotL').hidden=gm!=='log';$('backL').hidden=!f;$('gSubmit').textContent=f?'שלח קישור לאיפוס':'כניסה למערכת';$('gPass').autocomplete=r?'new-password':'current-password';$('gPass').value='';gErr('')}
+function gErr(t,ok){const e=$('gErr');e.textContent=t;e.style.color=ok?'#8fe0b5':''}
+$('tReg').onclick=()=>{gm='reg';gUI()};$('tLog').onclick=()=>{gm='log';gUI()};$('forgotL').onclick=()=>{gm='forgot';gUI()};$('backL').onclick=()=>{gm='log';gUI()};
+/* סיסמה: PBKDF2 עם מלח אקראי. בצד לקוח בלבד, ולכן מתאים להדגמה. אימות אמיתי חייב להתבצע בשרת. */
+const b64=u=>btoa(String.fromCharCode(...u)),unb64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+/* SHA-256 בקוד טהור: גיבוי לחיבור לא מאובטח (HTTP), שבו crypto.subtle אינו זמין */
+function sha256(m){
+  const K=[],H=[];
+  for(let n=2,c=0;c<64;n++){let q=1;for(let i=2;i*i<=n;i++)if(n%i==0){q=0;break}
+    if(q){if(c<8)H[c]=Math.pow(n,.5)%1*4294967296|0;K[c++]=Math.pow(n,1/3)%1*4294967296|0}}
+  const l=m.length,w=new Array(((l+8>>6)+1)*16).fill(0);
+  for(let i=0;i<l;i++)w[i>>2]|=m[i]<<(24-i%4*8);
+  w[l>>2]|=0x80<<(24-l%4*8);w[w.length-1]=l*8;
+  for(let o=0;o<w.length;o+=16){
+    const x=w.slice(o,o+16);
+    for(let i=16;i<64;i++){const a=x[i-15],b=x[i-2];
+      x[i]=(x[i-16]+(((a>>>7)|(a<<25))^((a>>>18)|(a<<14))^(a>>>3))+x[i-7]+(((b>>>17)|(b<<15))^((b>>>19)|(b<<13))^(b>>>10)))|0}
+    let[a,b,c,d,e,f,g,h]=H;
+    for(let i=0;i<64;i++){
+      const t1=(h+(((e>>>6)|(e<<26))^((e>>>11)|(e<<21))^((e>>>25)|(e<<7)))+((e&f)^(~e&g))+K[i]+x[i])|0;
+      const t2=((((a>>>2)|(a<<30))^((a>>>13)|(a<<19))^((a>>>22)|(a<<10)))+((a&b)^(a&c)^(b&c)))|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0}
+    [a,b,c,d,e,f,g,h].forEach((v,i)=>H[i]=(H[i]+v)|0)}
+  const out=new Uint8Array(32);H.forEach((v,i)=>{for(let j=0;j<4;j++)out[i*4+j]=v>>>(24-j*8)&255});return out}
+/* alg 'p' = PBKDF2 (חיבור מאובטח), alg 's' = SHA-256 חוזר (גיבוי, חלש יותר) */
+async function hp(pw,salt,alg){
+  const pb=new TextEncoder().encode(pw);
+  if(alg==='s'){let h=sha256(Uint8Array.from([...salt,...pb]));for(let i=0;i<20000;i++)h=sha256(Uint8Array.from([...h,...salt,...pb]));return b64(h)}
+  const k=await crypto.subtle.importKey('raw',pb,'PBKDF2',false,['deriveBits']);
+  return b64(new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:150000,hash:'SHA-256'},k,256)))}
+const pwOk=pw=>pw.length>=8&&/\p{L}/u.test(pw)&&/\d/.test(pw);
+$('gF').onsubmit=async e=>{
+  e.preventDefault();
+  const em=$('gMail').value.trim().toLowerCase(),nm=$('gName').value.trim(),pw=$('gPass').value,p=prof(),btn=$('gF').querySelector('[type=submit]');let name;
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return gErr('יש להזין כתובת דוא"ל תקינה');
+  if(gm==='forgot')return forgot(em);
+  if(gm==='reg'&&nm.length<2)return gErr('יש להזין שם מלא');
+  if(!pw)return gErr('יש להזין סיסמה');
+  if(gm==='reg'&&!pwOk(pw))return gErr('הסיסמה חייבת להכיל לפחות 8 תווים, אותיות ומספרים');
+  if(sb){name=await cloudAuth(em,nm,pw);if(name===null)return}
+  const sub=!!(window.crypto&&crypto.subtle);
+  btn.disabled=true;
+  if(name===undefined)try{
+    if(gm==='reg'){
+      if(p&&p.hash&&p.email===em)return gErr('כתובת הדוא"ל כבר רשומה. עברו להתחברות.');
+      const salt=crypto.getRandomValues(new Uint8Array(16));
+      const al=sub?'p':'s';lsSet(GK,JSON.stringify({name:nm,email:em,salt:b64(salt),alg:al,hash:await hp(pw,salt,al)}));name=nm;
+    }else{
+      if(p&&p.email===em&&!p.hash)return gErr('החשבון נוצר בגרסה קודמת ללא סיסמה. יש להירשם מחדש.');
+      const al=p&&p.alg||'p';
+      if(p&&p.email===em&&al==='p'&&!sub)return gErr('חשבון זה נוצר בחיבור מאובטח. יש להתחבר דרך כתובת HTTPS.');
+      if(!p||p.email!==em||await hp(pw,unb64(p.salt),al)!==p.hash)return gErr('דוא"ל או סיסמה שגויים');
+      name=p.name;
+    }
+  }catch(x){console.error(x);return gErr('אירעה שגיאה באימות. נסו שוב.')}finally{btn.disabled=false}
+  if(sb)await loadProfile();
+  curEmail=em;curName=name||'';usage();$('gPass').value='';$('who').textContent=name?'שלום, '+name:'שלום';
+  gate.classList.add('out');ws.forEach(x=>x.inert=false);
+  setTimeout(()=>{gate.hidden=true;$('drop').focus()},650)};
+if(prof()){gm='log';$('gMail').value=prof().email}
+gUI();(gm==='reg'?$('gName'):$('gMail')).focus();
+
+async function cloudAuth(em,nm,pw){const b=$('gF').querySelector('[type=submit]');b.disabled=true;
+  try{
+    if(gm==='reg'){
+      const{data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nm}}});
+      if(error){gErr(error.message);return null}
+      if(!data.session){const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error)console.warn('כניסה מיידית לאחר הרשמה: ',r.error.message)}
+      return nm}
+    const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
+    if(error){gErr(error.message);return null}
+    const m=data.user.user_metadata||{},lp=prof();
+    return (m.full_name||m.name||(lp&&lp.email===em?lp.name:'')||'').trim()
+  }catch(x){console.error(x);gErr('אירעה שגיאה בחיבור. נסו שוב.');return null}finally{b.disabled=false}}
+async function forgot(em){const b=$('gF').querySelector('[type=submit]');b.disabled=true;
+  try{if(sb){const{error}=await sb.auth.resetPasswordForEmail(em);if(error)return gErr(error.message)}
+    gErr(sb?'קישור לאיפוס הסיסמה נשלח לתיבת הדוא"ל שלך.':'אם הכתובת רשומה במערכת, נשלח אליה קישור לאיפוס הסיסמה (סימולציה).',true)
+  }catch(x){console.error(x);gErr('אירעה שגיאה. נסו שוב.')}finally{b.disabled=false}}
+
+/* התנתקות: איפוס הסשן וחזרה מיידית למסך ההתחברות, בלי רענון */
+async function logout(){
+  try{if(sb)await sb.auth.signOut()}catch(e){console.error(e)}
+  curEmail='';curName='';P=null;run++;
+  $('tl').innerHTML='';$('qs').innerHTML='';$('tlEmpty').style.display='';$('qsEmpty').style.display='';$('demoTl').style.display='none';
+  prog.classList.remove('on');note.className='note';input.value='';$('who').textContent='';
+  ['dlg','limD','payD','helpD'].forEach(i=>{if($(i).open)$(i).close()});
+  ws.forEach(x=>x.inert=true);usage();
+  gate.hidden=false;gate.classList.remove('out');
+  gm=prof()?'log':'reg';if(prof())$('gMail').value=prof().email;gUI();$('gMail').focus()}
+$('outBtn').onclick=logout;
+/* משתמש לא מחובר (או שפג תוקף החיבור): חוזרים למסך ההרשמה/התחברות הקיים */
+function needLogin(msg){
+  prog.classList.remove('on');
+  ['dlg','limD','payD','helpD'].forEach(i=>{if($(i).open)$(i).close()});
+  ws.forEach(x=>x.inert=true);
+  gate.hidden=false;gate.classList.remove('out');
+  gm='log';const pf=prof();if(pf)$('gMail').value=pf.email;gUI();
+  gErr(msg||'כדי להעלות קובץ יש להירשם או להתחבר תחילה.');$('gMail').focus()}
+const loggedIn=()=>!!curEmail;
+async function getToken(){
+  if(!sb)return curEmail?'local':'';
+  try{const{data}=await sb.auth.getSession();return data.session?data.session.access_token:''}catch(e){return ''}}
+
+/* ===== רשימת המתנה לפרימיום (איסוף לידים) ===== */
+let plan='';const LK='protocolai_leads';
+function openPay(p,a){plan=p?`פרימיום ${p} (₪${a.toLocaleString('he-IL')})`:'פרימיום (רשימת המתנה)';$('limD').close();
+  $('payInfo').textContent=p?'המסלול שנבחר: '+plan:`סיימתם את ${CFG.FREE} הניתוחים החינמיים. השאירו פרטים ונחזור אליכם לפתיחת גישה ללא הגבלה.`;
+  $('payForm').hidden=false;$('paySuccess').hidden=true;$('lName').value=curName;$('lMail').value=curEmail;$('lPhone').value='';$('cErr').textContent='';$('lPlan').value=plan;
+  $('payGo').disabled=false;$('payD').showModal();($('lName').value?$('lPhone'):$('lName')).focus()}
+$('payX').onclick=$('payDone').onclick=()=>$('payD').close();
+$('leadF').onsubmit=async e=>{
+  e.preventDefault();
+  const ce=t=>{$('cErr').textContent=t},nm=$('lName').value.trim(),ph=$('lPhone').value.trim(),em=$('lMail').value.trim().toLowerCase(),b=$('payGo');
+  if(nm.length<2)return ce('יש להזין שם מלא');
+  if(!/^\+?[\d\s\-()]{7,20}$/.test(ph)||ph.replace(/\D/g,'').length<9)return ce('יש להזין מספר טלפון תקין');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return ce('יש להזין כתובת אימייל תקינה');
+  ce('');b.disabled=true;b.innerHTML='<span class="spin"></span>שומר…';
+  const row={name:nm,phone:ph,email:em,plan};
+  /* הליד נשלח לשני יעדים: Netlify Forms (התראה במייל אליכם) וטבלת premium_leads ב-Supabase. מספיק שאחד הצליח. */
+  const jobs=[(async()=>{const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({'form-name':'premium-lead','bot-field':'',name:nm,phone:ph,email:em,plan}).toString()});if(!r.ok)throw new Error('FORM '+r.status)})()];
+  if(sb)jobs.push((async()=>{const{error}=await sb.from('premium_leads').insert([row]);if(error)throw error})());
+  try{
+    const rs=await Promise.allSettled(jobs);
+    rs.forEach(r=>{if(r.status==='rejected')console.warn('lead',r.reason)});
+    if(!sb){let arr=[];try{arr=JSON.parse(lsGet(LK)||'[]')}catch(x){}arr.push({...row,created_at:new Date().toISOString()});lsSet(LK,JSON.stringify(arr))}
+    else if(rs.every(r=>r.status==='rejected'))throw rs[0].reason;
+    $('payForm').hidden=true;$('paySuccess').hidden=false;
+  }catch(x){console.error(x);ce('אירעה שגיאה בשמירת הפרטים. נסו שוב.')}
+  finally{b.disabled=false;b.textContent='שריין לי מקום בפרימיום'}};
+
+/* ===== ניתוח קובץ: Serverless ===== */
+const DEMO={timeline:[
+{loc:"עמ' 4, שורה 12",speaker:'התובע (עד 1)',event:'סתר את גרסתו הקודמת לגבי שעת הגעת המשאית לזירה.',importance:'גבוהה'},
+{loc:"עמ' 9, שורה 3",speaker:'עו"ד ההגנה',event:'הציג מסמך משלוח הסותר את שעת ההגעה שנמסרה.',importance:'גבוהה'},
+{loc:"עמ' 14, שורה 2",speaker:'השופט כהן',event:'ביקש מההגנה להציג את חוזה ההתקשרות החתום המקור.',importance:'בינונית'},
+{loc:"עמ' 21, שורה 7",speaker:'עד ההגנה',event:'אישר כי לא נכח בזירה בעת האירוע.',importance:'בינונית'}],
+questions:[
+{topic:'סתירת זמנים',question:'בעמוד 4 מסרת כי הגעת בשעה 08:00, אך בתצהיר למשטרה צוין 09:30. איזו גרסה נכונה?',goal:'חשיפת סתירה בעדות'},
+{topic:'מקוריות מסמכים',question:'האם ברשותך המקור החתום של החוזה, או רק העתק?',goal:'ביסוס דרישת קבילות המסמך'},
+{topic:'נוכחות בזירה',question:'מה בדיוק ראית בעצמך, ומה נמסר לך מצד שלישי?',goal:'הבחנה בין עדות ישירה לשמועה'}]};
+const b64f=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(new Error('READ'));r.readAsDataURL(f)});
+const AMIME={mp3:'audio/mp3',wav:'audio/wav',m4a:'audio/mp4'};
+function loadScript(src){return new Promise((res,rej)=>{if(window.mammoth)return res();const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=()=>rej(new Error('DOCX'));document.head.appendChild(s)})}
+async function docxText(f){await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
+  const r=await window.mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});return r.value}
+const IMPN=v=>{v=String(v||'');return v.includes('גבוה')?'גבוהה':v.includes('נמוכ')?'נמוכה':'בינונית'};
+async function analyze(f,setP){
+  const ext=(f.name.split('.').pop()||'').toLowerCase(),audio=isAudio(f);
+  if(!audio&&!['pdf','docx'].includes(ext))throw new Error('FMT');
+  if(f.size>14*1024*1024||(ext!=='docx'&&f.size>4*1024*1024))throw new Error('BIG'); /* מגבלת בקשה בפונקציות Netlify: 6MB כולל Base64 */
+  const label=audio?'מתמלל ומנתח את השמע…':'מנתח את המסמך…';
+  if(!sb){ /* סימולציה מקומית: Supabase לא הוגדר */
+    setP(15,'קורא את הקובץ…');
+    for(let p=30;p<=90;p+=15){setP(p,p<60?label:'בונה ציר זמן ושאלות…');await new Promise(r=>setTimeout(r,300))}
+    return DEMO}
+  setP(10,'קורא את הקובץ…');
+  let body;
+  if(audio)body={filePart:{inlineData:{mimeType:AMIME[ext]||f.type||'audio/mp3',data:await b64f(f)}}};
+  else if(ext==='pdf')body={filePart:{inlineData:{mimeType:'application/pdf',data:await b64f(f)}}};
+  else{const t=(await docxText(f)).trim();if(!t)throw new Error('EMPTY');body={protocolText:t}}
+  const tok=await getToken();if(!tok)throw new Error('AUTH');
+  setP(30,label);
+  let cur=30;const tm=setInterval(()=>{if(cur<88){cur+=2;setP(cur,cur<65?label:'בונה ציר זמן ושאלות…')}},700);
+  try{
+    const res=await fetch(ANALYZE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify(body)});
+    const j=await res.json().catch(()=>({}));
+    if(!res.ok){console.error('analyze',res.status,j);throw new Error(j.code||(res.status===413?'BIG':'CLOUD'))}
+    if(P&&typeof j.usage_count==='number'){P.count=j.usage_count;P.prem=!!j.is_premium}
+    const txt=String(j.text||'').replace(/^\s*```(?:json)?|```\s*$/g,'').trim();
+    if(!txt)throw new Error('EMPTY');
+    const d=JSON.parse(txt);
+    return{timeline:(d.timeline||[]).map(r=>({...r,importance:IMPN(r.importance)})),questions:d.questions||[]}
+  }finally{clearInterval(tm)}}
+function render(d){
+  $('tl').innerHTML=(d.timeline||[]).map((r,i)=>`<tr style="animation-delay:${i*90}ms"><td>${esc(r.loc)}</td><td>${esc(r.speaker)}</td><td>${esc(r.event)}</td><td class="pri"><span class="${r.importance==='גבוהה'?'hi':''}">${esc(r.importance)}</span></td></tr>`).join('');
+  $('qs').innerHTML=(d.questions||[]).map((q,i)=>`<div class="q" style="animation-delay:${i*110}ms"><b>${esc(q.topic)}</b><p>${esc(q.question)}</p><small>מטרה: ${esc(q.goal)}</small></div>`).join('');
+  $('tlEmpty').style.display='none';$('qsEmpty').style.display='none';$('demoTl').style.display='block';
+}
+const ERR={CLOUD:'פונקציית הניתוח ב-Netlify נכשלה או לא זמינה. ודאו שהיא פורסמה ושהוגדרו בה משתני הסביבה.',AI:'שירות הניתוח (Gemini) לא החזיר תשובה. נסו שוב בעוד רגע.',RATE:'בוצעו יותר מדי בקשות. נסו שוב בעוד דקה.',BIG:'קובץ PDF או שמע מוגבל ל-4MB, וקובץ Word ל-14MB. פצלו את הקובץ לחלקים קטנים יותר.',EMPTY:'לא התקבל תוכן לניתוח. ייתכן שהקובץ ריק או שהתוכן נחסם. נסו קובץ אחר.',READ:'קריאת הקובץ נכשלה. נסו שוב.',DOCX:'טעינת קורא ה-Word נכשלה. בדקו חיבור לאינטרנט או המירו ל-PDF.',FMT:'סוג הקובץ אינו נתמך. יש להעלות PDF, DOCX, MP3, WAV או M4A.'};
+let run=0;
+async function handle(f){
+  if(!f)return;
+  input.value='';
+  if(!loggedIn()||!(await getToken())){needLogin();return}
+  if(sb)await loadProfile();
+  if(blocked()){openPay(null);return}
+  const id=++run;note.className='note';
+  fname.textContent=f.name;prog.classList.add('on');
+  const setP=(p,t)=>{if(id!==run)return;fill.style.width=p+'%';pct.textContent=p+'%';stage.textContent=t};
+  setP(5,'מתחיל…');
+  try{
+    const d=await analyze(f,setP);
+    if(id!==run)return;
+    setP(100,'הניתוח הושלם');render(d);if(sb)usage();else{bump();say('מצב הדגמה: לא הוגדר Supabase, ולכן הנתונים המוצגים פיקטיביים ואינם תוצאת ניתוח של הקובץ.')}
+  }catch(e){
+    if(id!==run)return;
+    prog.classList.remove('on');
+    if(e.message==='AUTH'){needLogin('פג תוקף החיבור. יש להתחבר מחדש.');return}
+    if(e.message==='LIMIT'){if(P){P.prem=false;P.count=Math.max(P.count,CFG.FREE)}usage();openPay(null);return}
+    const m=ERR[e.message];
+    if(m)say(esc(m),true);
+    else if(e instanceof SyntaxError)say('התשובה מהשרת אינה בפורמט תקין. נסו שוב.',true);
+    else say('הניתוח נכשל: '+esc(e.message),true);
+  }
+}
+function pick(){if(!loggedIn()){needLogin();return}if(blocked()){openPay(null);return}input.click()}
+drop.addEventListener('click',pick);
+drop.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}});
+input.addEventListener('change',()=>handle(input.files[0]));
+['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
+['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
+drop.addEventListener('drop',e=>handle(e.dataTransfer.files[0]));
+</script>
+</body>
+</html>
