@@ -316,7 +316,7 @@ background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);
 <p class="big">מפאת רגישות המידע, סיווג הנתונים והביקוש הגבוה לשירות פרוטוקול-AI, אנו מצרפים משרדי עורכי דין לגרסת הפרימיום הבלתי-מוגבלת בצורה מדורגת ומבוקרת.</p>
 <p class="big">השאירו את פרטיכם כאן כדי לשריין את מקומכם ולקבל עדיפות בפתיחת החשבון ומחיר השקה מיוחד מול נציג.</p>
 <div class="pinfo" id="payInfo"></div>
-<form id="leadF" name="premium-lead" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+<form id="leadF" name="premium-lead" novalidate>
 <input type="hidden" name="form-name" value="premium-lead"><input type="hidden" name="plan" id="lPlan"><p hidden><label>אל תמלאו: <input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
 <div class="gfld"><label for="lName">שם מלא</label><input id="lName" name="name" type="text" autocomplete="name" required></div>
 <div class="gfld"><label for="lPhone">מספר טלפון</label><input id="lPhone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required></div>
@@ -333,10 +333,10 @@ background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);
 </div></dialog>
 
 <script>
-/* ===== ניתוח דרך Netlify Function =====
-   הדפדפן לא מחזיק שום מפתח Gemini. הקובץ נשלח לפונקציה /.netlify/functions/analyze-protocol יחד עם
+/* ===== ניתוח דרך Cloudflare Pages Function =====
+   הדפדפן לא מחזיק שום מפתח Gemini. הקובץ נשלח לפונקציה /api/analyze-protocol יחד עם
    אסימון ההתחברות של Supabase. הפונקציה מאמתת את המשתמש, בודקת פרימיום ומכסה, קוראת ל-Gemini ומעדכנת את המונה. */
-const ANALYZE_URL = '/.netlify/functions/analyze-protocol';
+const ANALYZE_URL = '/api/analyze-protocol';
 /* ===== Supabase: הדבק כאן את הפרטים מהפרויקט שלך ===== */
 const SUPABASE_URL = "https://saydqlceufnczywjjuwh.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0"; /* מפתח anon ציבורי: מותר להופיע באתר */
@@ -364,7 +364,7 @@ $('save').onclick=()=>{const k=keyIn.value.trim();if(k.length<8){$('prov').textC
 $('del').onclick=()=>{try{localStorage.removeItem(KS)}catch(e){}keyIn.value='';$('prov').textContent='';syncBtn()};
 syncBtn();
 /* ===== הגדרות מסחריות =====
-   FREE: מספר ניתוחים חינמיים. עם Supabase המכסה נאכפת בשרת (פונקציית Netlify + טבלת profiles). מונה LocalStorage משמש רק לסימולציה מקומית. */
+   FREE: מספר ניתוחים חינמיים. עם Supabase המכסה נאכפת בשרת (פונקציית Cloudflare + טבלת profiles). מונה LocalStorage משמש רק לסימולציה מקומית. */
 const CFG={FREE:3},UK='protocolai_usage',GK='protocolai_profile',PK='protocolai_premium:';
 let curEmail='',curName='';
 let mem=0;
@@ -513,10 +513,10 @@ $('leadF').onsubmit=async e=>{
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em))return ce('יש להזין כתובת אימייל תקינה');
   ce('');b.disabled=true;b.innerHTML='<span class="spin"></span>שומר…';
   const row={name:nm,phone:ph,email:em,plan};
-  /* הליד נשלח לשני יעדים: Netlify Forms (התראה במייל אליכם) וטבלת premium_leads ב-Supabase. מספיק שאחד הצליח. */
-  const jobs=[(async()=>{const r=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({'form-name':'premium-lead','bot-field':'',name:nm,phone:ph,email:em,plan}).toString()});if(!r.ok)throw new Error('FORM '+r.status)})()];
-  if(sb)jobs.push((async()=>{const{error}=await sb.from('premium_leads').insert([row]);if(error)throw error})());
+  /* הליד נשלח לפונקציה /api/lead (שומרת ב-Supabase ושולחת התראה במייל). אם היא נכשלה, ניסיון שמירה ישיר ל-Supabase. */
+  const viaApi=async()=>{const r=await fetch('/api/lead',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({...row,'bot-field':(document.querySelector('#leadF [name=bot-field]')||{}).value||''})});if(!r.ok)throw new Error('LEAD '+r.status)};
+  const jobs=[viaApi().catch(async x=>{if(!sb)throw x;const{error}=await sb.from('premium_leads').insert([row]);if(error)throw error})];
   try{
     const rs=await Promise.allSettled(jobs);
     rs.forEach(r=>{if(r.status==='rejected')console.warn('lead',r.reason)});
@@ -545,7 +545,7 @@ const IMPN=v=>{v=String(v||'');return v.includes('גבוה')?'גבוהה':v.incl
 async function analyze(f,setP){
   const ext=(f.name.split('.').pop()||'').toLowerCase(),audio=isAudio(f);
   if(!audio&&!['pdf','docx'].includes(ext))throw new Error('FMT');
-  if(f.size>14*1024*1024||(ext!=='docx'&&f.size>4*1024*1024))throw new Error('BIG'); /* מגבלת בקשה בפונקציות Netlify: 6MB כולל Base64 */
+  if(f.size>14*1024*1024||(ext!=='docx'&&f.size>4*1024*1024))throw new Error('BIG'); /* הגבלת גודל לשמירה על זמן עיבוד קצר בפונקציה */
   const label=audio?'מתמלל ומנתח את השמע…':'מנתח את המסמך…';
   if(!sb){ /* סימולציה מקומית: Supabase לא הוגדר */
     setP(15,'קורא את הקובץ…');
@@ -560,7 +560,7 @@ async function analyze(f,setP){
   setP(30,label);
   let cur=30;const tm=setInterval(()=>{if(cur<88){cur+=2;setP(cur,cur<65?label:'בונה ציר זמן ושאלות…')}},700);
   try{
-    const res=await fetch(ANALYZE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify(body)});
+    let res;try{res=await fetch(ANALYZE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify(body)})}catch(x){console.error('analyze network',x);throw new Error('NET')}
     const j=await res.json().catch(()=>({}));
     if(!res.ok){console.error('analyze',res.status,j);throw new Error(j.code||(res.status===413?'BIG':'CLOUD'))}
     if(P&&typeof j.usage_count==='number'){P.count=j.usage_count;P.prem=!!j.is_premium}
@@ -574,7 +574,7 @@ function render(d){
   $('qs').innerHTML=(d.questions||[]).map((q,i)=>`<div class="q" style="animation-delay:${i*110}ms"><b>${esc(q.topic)}</b><p>${esc(q.question)}</p><small>מטרה: ${esc(q.goal)}</small></div>`).join('');
   $('tlEmpty').style.display='none';$('qsEmpty').style.display='none';$('demoTl').style.display='block';
 }
-const ERR={CLOUD:'פונקציית הניתוח ב-Netlify נכשלה או לא זמינה. ודאו שהיא פורסמה ושהוגדרו בה משתני הסביבה.',AI:'שירות הניתוח (Gemini) לא החזיר תשובה. נסו שוב בעוד רגע.',RATE:'בוצעו יותר מדי בקשות. נסו שוב בעוד דקה.',BIG:'קובץ PDF או שמע מוגבל ל-4MB, וקובץ Word ל-14MB. פצלו את הקובץ לחלקים קטנים יותר.',EMPTY:'לא התקבל תוכן לניתוח. ייתכן שהקובץ ריק או שהתוכן נחסם. נסו קובץ אחר.',READ:'קריאת הקובץ נכשלה. נסו שוב.',DOCX:'טעינת קורא ה-Word נכשלה. בדקו חיבור לאינטרנט או המירו ל-PDF.',FMT:'סוג הקובץ אינו נתמך. יש להעלות PDF, DOCX, MP3, WAV או M4A.'};
+const ERR={NET:'אין חיבור לפונקציית הניתוח (נפתח מתוך: '+location.origin+'). ודאו שהאתר נפתח דרך כתובת האתר ב-Cloudflare (pages.dev), ולא מקובץ במחשב. אם כן, בדקו ב-Cloudflare (Functions, ואז Real-time logs) אם הפונקציה קרסה.',CLOUD:'פונקציית הניתוח נכשלה או לא זמינה. ודאו שהתיקייה functions נפרסה ושהוגדרו בה משתני הסביבה ב-Cloudflare.',AI:'שירות הניתוח (Gemini) לא החזיר תשובה. נסו שוב בעוד רגע.',RATE:'בוצעו יותר מדי בקשות. נסו שוב בעוד דקה.',BIG:'קובץ PDF או שמע מוגבל ל-4MB, וקובץ Word ל-14MB. פצלו את הקובץ לחלקים קטנים יותר.',EMPTY:'לא התקבל תוכן לניתוח. ייתכן שהקובץ ריק או שהתוכן נחסם. נסו קובץ אחר.',READ:'קריאת הקובץ נכשלה. נסו שוב.',DOCX:'טעינת קורא ה-Word נכשלה. בדקו חיבור לאינטרנט או המירו ל-PDF.',FMT:'סוג הקובץ אינו נתמך. יש להעלות PDF, DOCX, MP3, WAV או M4A.'};
 let run=0;
 async function handle(f){
   if(!f)return;
