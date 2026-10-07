@@ -342,10 +342,11 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 /* אם המפתחות נשארו כברירת מחדל -> סימולציה מקומית (ללא פניות רשת). אחרת -> חיבור אמיתי ל-Supabase. */
 const CLOUD = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
 let supabase = null;
-if (CLOUD && window.supabase && window.supabase.createClient) {
-  try { supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error('Supabase init failed:', e); }
-} else { console.warn('מצב סימולציה מקומית פעיל (לא הוזנו מפתחות Supabase).'); }
-
+try { 
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
+} catch (e) { 
+  console.error('Supabase init failed:', e); 
+}
 const drop=document.getElementById('drop'),input=document.getElementById('file'),prog=document.getElementById('prog'),
 fill=document.getElementById('fill'),pct=document.getElementById('pct'),stage=document.getElementById('stage'),fname=document.getElementById('fname');
 const isAudio=f=>/\.(mp3|wav|m4a)$/i.test(f.name)||(f.type||'').startsWith('audio/');
