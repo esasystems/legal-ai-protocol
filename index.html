@@ -359,7 +359,8 @@ const SUPABASE_URL = 'https://saydqlceufnczywjjuwh.supabase.co';
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0";
 /* אם המפתחות נשארו כברירת מחדל -> סימולציה מקומית (ללא פניות רשת). אחרת -> חיבור אמיתי ל-Supabase. */
 const CLOUD = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
-try { 
+let supabase = null;
+   try { 
   supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
 } catch (e) { 
   console.error('Supabase init failed:', e); 
