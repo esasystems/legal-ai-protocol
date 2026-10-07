@@ -359,9 +359,9 @@ const SUPABASE_URL = 'https://saydqlceufnczywjjuwh.supabase.co';
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0";
 /* אם המפתחות נשארו כברירת מחדל -> סימולציה מקומית (ללא פניות רשת). אחרת -> חיבור אמיתי ל-Supabase. */
 const CLOUD = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
-let supabase = null;
+var sbClient = null;
    try { 
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); 
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 } catch (e) { 
   console.error('Supabase init failed:', e); 
 }
@@ -626,48 +626,87 @@ input.addEventListener('change',()=>handle(input.files[0]));
 ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
 drop.addEventListener('drop',e=>handle(e.dataTransfer.files[0]));
-   // 1. פונקציית מעבר חלק ודינמי בין הטפסים
+// פונקציית מעבר דינמית בין המצבים (שולטת ישירות בשדה ה"שם מלא" ובטקסט של הכפתור)
 window.switchTab = function(tab) {
-    const loginCont = document.getElementById('login-container');
-    const registerCont = document.getElementById('register-container');
-    const tabLogin = document.getElementById('tReg'); 
-    const tabRegister = document.getElementById('tLog'); 
+    const nameField = document.getElementById('nameF') || document.getElementById('gName')?.closest('.gfld');
+    const submitBtn = document.getElementById('gSubmit');
+    const tabLogin = document.getElementById('tReg');
+    const tabRegister = document.getElementById('tLog');
     
     if (tab === 'login') {
-        loginCont.style.display = 'block';
-        registerCont.style.display = 'none';
-        tabLogin.classList.add('on');
-        tabRegister.classList.remove('on');
+        if (nameField) nameField.style.display = 'none'; // מעלים את השם המלא בהתחברות
+        if (submitBtn) submitBtn.innerText = 'כניסה למערכת';
+        if (tabLogin) tabLogin.classList.add('on');
+        if (tabRegister) tabRegister.classList.remove('on');
+        
+        // מעדכנים את הטופס שיפעיל התחברות
+        const form = document.getElementById('gF');
+        if (form) form.onsubmit = window.handleLogin;
     } else {
-        loginCont.style.display = 'none';
-        registerCont.style.display = 'block';
-        tabRegister.classList.add('on');
-        tabLogin.classList.remove('on');
+        if (nameField) nameField.style.display = 'block'; // מציגים את השם המלא בהרשמה
+        if (submitBtn) submitBtn.innerText = 'הרשמה ומעבר לניתוח';
+        if (tabRegister) tabRegister.classList.add('on');
+        if (tabLogin) tabLogin.classList.remove('on');
+        
+        // מעדכנים את הטופס שיפעיל הרשמה
+        const form = document.getElementById('gF');
+        if (form) form.onsubmit = window.handleRegister;
     }
 }
 
-// 2. פונקציית הרשמה מאובטחת מול סופאבייס (מופעלת משורה 310 שלך)
+// פונקציית הרשמה מול סופאבייס (משתמשת במשתנה החדש sbClient)
 window.handleRegister = async function(event) {
-    event.preventDefault();
-    if (!supabase) return alert('המערכת באתחול, אנא נסה שוב בעוד רגע.');
+    if (event) event.preventDefault();
+    if (!sbClient) return alert('המערכת באתחול, אנא נסה שוב בעוד רגע.');
     
-    const email = document.getElementById('regMail').value;
-    const password = document.getElementById('regPass').value;
-    const submitBtn = document.getElementById('gRegisterSubmit');
+    const email = document.getElementById('gMail').value;
+    const password = document.getElementById('gPass').value;
+    const submitBtn = document.getElementById('gSubmit');
     
     submitBtn.disabled = true;
     submitBtn.innerText = 'מבצע הרשמה...';
     
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await sbClient.auth.signUp({ email, password });
     
     if (error) {
         alert('שגיאה בתהליך ההרשמה: ' + error.message);
         submitBtn.disabled = false;
         submitBtn.innerText = 'הרשמה ומעבר לניתוח';
     } else {
-        alert('ההרשמה בוצעה בהצלחה! כעת תוכל להתחבר עם פרטים אלו.');
+        alert('ההרשמה בוצעה בהצלחה! כעת תוכל להתחבר.');
         window.switchTab('login');
     }
+}
+
+// פונקציית התחברות מול סופאבייס (משתמשת במשתנה החדש sbClient)
+window.handleLogin = async function(event) {
+    if (event) event.preventDefault();
+    if (!sbClient) return alert('המערכת באתחול, אנא נסה שוב בעוד רגע.');
+    
+    const email = document.getElementById('gMail').value;
+    const password = document.getElementById('gPass').value;
+    const submitBtn = document.getElementById('gSubmit');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'מתחבר...';
+    
+    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+        alert('פרטי כניסה שגויים: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'כניסה למערכת';
+    } else {
+        document.getElementById('gate').style.display = 'none';
+        if (document.getElementById('user-display')) {
+            document.getElementById('user-display').innerText = email;
+        }
+        window.userSessionToken = data.session?.access_token;
+    }
+}
+
+// איתחול אוטומטי של הטופס למצב התחברות עם טעינת הדף
+setTimeout(() => { window.switchTab('login'); }, 500);
 }
 </script>
 </body>
