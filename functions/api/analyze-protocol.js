@@ -4,7 +4,7 @@
      SUPABASE_URL               (Text)
      SUPABASE_SERVICE_ROLE_KEY  (Secret)
      GEMINI_MODEL               (אופציונלי, ברירת מחדל gemini-2.5-flash)
-   אחרי הוספה או שינוי צריך deploy חדש. */
+   אחרי הוספה או שינוי צריך deploy חדש. האכיפה כאן, בשרת: אימות משתמש, is_premium / usage_count, עדכון המונה לאחר הצלחה. */
 
 const FREE = 3;
 const MIME_OK = /^(application\/pdf|audio\/(mp3|mpeg|wav|x-wav|mp4|x-m4a|m4a))$/;
@@ -80,11 +80,12 @@ export async function onRequestPost({ request, env }) {
     });
     const j = await gr.json().catch(() => ({}));
     if (!gr.ok) {
-      console.error('Gemini error', gr.status, j.error && j.error.message);
-      return reply(gr.status === 429 ? 429 : 502, { code: gr.status === 429 ? 'RATE' : 'AI' });
+      const msg = String((j.error && j.error.message) || '').slice(0, 300);
+      console.error('Gemini error', gr.status, msg);
+      return reply(gr.status === 429 ? 429 : 502, { code: gr.status === 429 ? 'RATE' : 'AI', detail: gr.status + ': ' + msg });
     }
     text = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(x => x.text || '').join('');
-  } catch (e) { console.error(e); return reply(502, { code: 'AI' }); }
+  } catch (e) { console.error(e); return reply(502, { code: 'AI', detail: String(e).slice(0, 200) }); }
   if (!text.trim()) return reply(422, { code: 'EMPTY' });
 
   /* 5. עדכון המונה רק לאחר ניתוח מוצלח (ורק למשתמש שאינו פרימיום) */
@@ -96,7 +97,7 @@ export async function onRequestPost({ request, env }) {
         method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ usage_count: newCount })
       });
       const rows = up.ok ? await up.json() : [];
-      if (!rows.length) newCount = ((await readProfile()) || {}).usage_count ?? newCount;
+      if (!rows.length) newCount = ((await readProfile()) || {}).usage_count ?? newCount; /* בקשה מקבילה כבר עדכנה */
     } catch (e) { console.error('usage update failed', e); }
   }
   return reply(200, { text, usage_count: newCount, is_premium: premium });
