@@ -336,7 +336,7 @@ background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);
 /* ===== ניתוח דרך Netlify Function =====
    הדפדפן לא מחזיק שום מפתח Gemini. הקובץ נשלח לפונקציה /.netlify/functions/analyze-protocol יחד עם
    אסימון ההתחברות של Supabase. הפונקציה מאמתת את המשתמש, בודקת פרימיום ומכסה, קוראת ל-Gemini ומעדכנת את המונה. */
-const ANALYZE_URL = '/.netlify/functions/analyze-protocol';
+const ANALYZE_URL = '/.netlify/functions/analyze-protocol-background';
 const SUPABASE_URL = 'https://saydqlceufnczywjjuwh.supabase.co';
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0";
 /* אם המפתחות נשארו כברירת מחדל -> סימולציה מקומית (ללא פניות רשת). אחרת -> חיבור אמיתי ל-Supabase. */
