@@ -562,7 +562,7 @@ async function analyze(f,setP){
   try{
     let res;try{res=await fetch(ANALYZE_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok},body:JSON.stringify(body)})}catch(x){console.error('analyze network',x);throw new Error('NET')}
     const j=await res.json().catch(()=>({}));
-    if(!res.ok){console.error('analyze',res.status,j);throw new Error(j.code||(res.status===413?'BIG':'CLOUD'))}
+    if(!res.ok){console.error('analyze',res.status,j);const er=new Error(j.code||(res.status===413?'BIG':'CLOUD'));er.detail=j.detail||'';throw er}
     if(P&&typeof j.usage_count==='number'){P.count=j.usage_count;P.prem=!!j.is_premium}
     const txt=String(j.text||'').replace(/^\s*```(?:json)?|```\s*$/g,'').trim();
     if(!txt)throw new Error('EMPTY');
@@ -596,7 +596,7 @@ async function handle(f){
     if(e.message==='AUTH'){needLogin('פג תוקף החיבור. יש להתחבר מחדש.');return}
     if(e.message==='LIMIT'){if(P){P.prem=false;P.count=Math.max(P.count,CFG.FREE)}usage();openPay(null);return}
     const m=ERR[e.message];
-    if(m)say(esc(m),true);
+    if(m)say(esc(m)+(e.detail?'<br><small dir="ltr">'+esc(e.detail)+'</small>':''),true);
     else if(e instanceof SyntaxError)say('התשובה מהשרת אינה בפורמט תקין. נסו שוב.',true);
     else say('הניתוח נכשל: '+esc(e.message),true);
   }
