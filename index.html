@@ -284,31 +284,13 @@ background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);
 <h1 id="gT"><span>פרוטוקול-AI</span> - סביבת עבודה משפטית מסווגת</h1>
 <p class="gsub">הירשם כעת וקבל 3 קבצים ראשונים לניתוח ללא עלות</p>
 <form class="gform" id="gF" novalidate>
-<div class="gtabs" role="tablist"><button type="button" id="tReg" class="on" onclick="switchTab('login')">התחברות</button><button type="button" id="tLog" onclick="switchTab('register')">הרשמה</button></div>
-   <div id="login-container">
+<div class="gtabs" role="tablist"><button type="button" id="tReg" class="on">הרשמה</button><button type="button" id="tLog">התחברות</button></div>
 <div class="gfld" id="nameF"><label for="gName">שם מלא</label><input id="gName" type="text" autocomplete="name"></div>
 <div class="gfld"><label for="gMail">דוא"ל</label><input id="gMail" type="email" autocomplete="email" spellcheck="false"></div>
 <div class="gfld" id="passF"><label for="gPass">סיסמה</label><input id="gPass" type="password" autocomplete="current-password" spellcheck="false"><div class="ghint" id="pHint">הסיסמה חייבת להכיל לפחות 8 תווים, אותיות ומספרים</div></div>
 <div class="gerr" id="gErr" role="alert"></div>
 <div class="glinks"><button type="button" class="glink" id="forgotL" hidden>שכחתי סיסמה?</button><button type="button" class="glink" id="backL" hidden>חזרה להתחברות</button></div>
 <button class="btn gold xl" id="gSubmit" type="submit">כניסה למערכת</button>
-      </div>
-   <!-- אזור הרשמה מופרד ומאובטח (שלב 2) -->
-<div id="register-container" class="hidden" style="display: none;">
-  <div class="gfld" id="regNameF">
-    <label for="regName">שם מלא</label>
-    <input id="regName" type="text" autocomplete="name">
-  </div>
-  <div class="gfld" id="regMailF">
-    <label for="regMail">דוא"ל מקצועי</label>
-    <input id="regMail" type="email" autocomplete="email" spellcheck="false">
-  </div>
-  <div class="gfld" id="regPassF">
-    <label for="regPass">סיסמה (לפחות 6 תווים)</label>
-    <input id="regPass" type="password" autocomplete="new-password">
-  </div>
-  <button class="btn gold xl" id="gRegisterSubmit" type="button" onclick="handleRegister(event)" style="width:100%; margin-top:12px;">הרשמה ומעבר לניתוח</button>
-</div>
 </form>
 <div class="gfoot">הגישה מיועדת לאנשי מקצוע בתחום המשפט.</div>
 </div></div>
@@ -354,17 +336,17 @@ background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);
 /* ===== ניתוח דרך Netlify Function =====
    הדפדפן לא מחזיק שום מפתח Gemini. הקובץ נשלח לפונקציה /.netlify/functions/analyze-protocol יחד עם
    אסימון ההתחברות של Supabase. הפונקציה מאמתת את המשתמש, בודקת פרימיום ומכסה, קוראת ל-Gemini ומעדכנת את המונה. */
-const ANALYZE_URL = '/.netlify/functions/analyze-protocol-background';
-const SUPABASE_URL = 'https://saydqlceufnczywjjuwh.supabase.co';
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0";
+const ANALYZE_URL = '/.netlify/functions/analyze-protocol';
+/* ===== Supabase: הדבק כאן את הפרטים מהפרויקט שלך ===== */
+const SUPABASE_URL = "https://saydqlceufnczywjjuwh.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNheWRxbGNldWZuY3p5d2pqdXdoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExOTg4MjcsImV4cCI6MjEwNjc3NDgyN30.T1xoaw-I6Hxp_wrcbkkgMgr26rZl-M_h0UgpH1JpxD0"; /* מפתח anon ציבורי: מותר להופיע באתר */
 /* אם המפתחות נשארו כברירת מחדל -> סימולציה מקומית (ללא פניות רשת). אחרת -> חיבור אמיתי ל-Supabase. */
 const CLOUD = SUPABASE_URL !== "YOUR_SUPABASE_URL_HERE" && SUPABASE_ANON_KEY !== "YOUR_SUPABASE_ANON_KEY_HERE";
-var sbClient = null;
-   try { 
-  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-} catch (e) { 
-  console.error('Supabase init failed:', e); 
-}
+let sb = null;
+if (CLOUD && window.supabase && window.supabase.createClient) {
+  try { sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch (e) { console.error('Supabase init failed:', e); }
+} else { console.warn('מצב סימולציה מקומית פעיל (לא הוזנו מפתחות Supabase).'); }
+
 const drop=document.getElementById('drop'),input=document.getElementById('file'),prog=document.getElementById('prog'),
 fill=document.getElementById('fill'),pct=document.getElementById('pct'),stage=document.getElementById('stage'),fname=document.getElementById('fname');
 const isAudio=f=>/\.(mp3|wav|m4a)$/i.test(f.name)||(f.type||'').startsWith('audio/');
@@ -480,7 +462,7 @@ async function cloudAuth(em,nm,pw){const b=$('gF').querySelector('[type=submit]'
     if(gm==='reg'){
       const{data,error}=await sb.auth.signUp({email:em,password:pw,options:{data:{full_name:nm}}});
       if(error){gErr(error.message);return null}
-      if(!data.session){const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error)console.warn('כניסה מיידית לאחר הרשמה: ',r.error.message)}
+      if(!data.session){const r=await sb.auth.signInWithPassword({email:em,password:pw});if(r.error){gErr('ההרשמה הצליחה. יש לאשר את כתובת הדוא"ל דרך הקישור שנשלח אליכם, ואז להתחבר.',true);gm='log';gUI();gErr('ההרשמה הצליחה. יש לאשר את כתובת הדוא"ל דרך הקישור שנשלח אליכם, ואז להתחבר.',true);return null}}
       return nm}
     const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
     if(error){gErr(error.message);return null}
@@ -626,88 +608,6 @@ input.addEventListener('change',()=>handle(input.files[0]));
 ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
 drop.addEventListener('drop',e=>handle(e.dataTransfer.files[0]));
-// פונקציית מעבר דינמית בין המצבים (שולטת ישירות בשדה ה"שם מלא" ובטקסט של הכפתור)
-window.switchTab = function(tab) {
-    const nameField = document.getElementById('nameF') || document.getElementById('gName')?.closest('.gfld');
-    const submitBtn = document.getElementById('gSubmit');
-    const tabLogin = document.getElementById('tReg');
-    const tabRegister = document.getElementById('tLog');
-    
-    if (tab === 'login') {
-        if (nameField) nameField.style.display = 'none'; // מעלים את השם המלא בהתחברות
-        if (submitBtn) submitBtn.innerText = 'כניסה למערכת';
-        if (tabLogin) tabLogin.classList.add('on');
-        if (tabRegister) tabRegister.classList.remove('on');
-        
-        // מעדכנים את הטופס שיפעיל התחברות
-        const form = document.getElementById('gF');
-        if (form) form.onsubmit = window.handleLogin;
-    } else {
-        if (nameField) nameField.style.display = 'block'; // מציגים את השם המלא בהרשמה
-        if (submitBtn) submitBtn.innerText = 'הרשמה ומעבר לניתוח';
-        if (tabRegister) tabRegister.classList.add('on');
-        if (tabLogin) tabLogin.classList.remove('on');
-        
-        // מעדכנים את הטופס שיפעיל הרשמה
-        const form = document.getElementById('gF');
-        if (form) form.onsubmit = window.handleRegister;
-    }
-}
-
-// פונקציית הרשמה מול סופאבייס (משתמשת במשתנה החדש sbClient)
-window.handleRegister = async function(event) {
-    if (event) event.preventDefault();
-    if (!sbClient) return alert('המערכת באתחול, אנא נסה שוב בעוד רגע.');
-    
-    const email = document.getElementById('gMail').value;
-    const password = document.getElementById('gPass').value;
-    const submitBtn = document.getElementById('gSubmit');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'מבצע הרשמה...';
-    
-    const { data, error } = await sbClient.auth.signUp({ email, password });
-    
-    if (error) {
-        alert('שגיאה בתהליך ההרשמה: ' + error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'הרשמה ומעבר לניתוח';
-    } else {
-        alert('ההרשמה בוצעה בהצלחה! כעת תוכל להתחבר.');
-        window.switchTab('login');
-    }
-}
-
-// פונקציית התחברות מול סופאבייס (משתמשת במשתנה החדש sbClient)
-window.handleLogin = async function(event) {
-    if (event) event.preventDefault();
-    if (!sbClient) return alert('המערכת באתחול, אנא נסה שוב בעוד רגע.');
-    
-    const email = document.getElementById('gMail').value;
-    const password = document.getElementById('gPass').value;
-    const submitBtn = document.getElementById('gSubmit');
-    
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'מתחבר...';
-    
-    const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
-    
-    if (error) {
-        alert('פרטי כניסה שגויים: ' + error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'כניסה למערכת';
-    } else {
-        document.getElementById('gate').style.display = 'none';
-        if (document.getElementById('user-display')) {
-            document.getElementById('user-display').innerText = email;
-        }
-        window.userSessionToken = data.session?.access_token;
-    }
-}
-
-// איתחול אוטומטי של הטופס למצב התחברות עם טעינת הדף
-setTimeout(() => { window.switchTab('login'); }, 500);
-}
 </script>
 </body>
 </html>
