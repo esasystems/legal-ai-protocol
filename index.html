@@ -284,13 +284,31 @@ background:radial-gradient(ellipse at 50% 0,#17386a 0,#0a1a33 55%,#050d1c 100%);
 <h1 id="gT"><span>פרוטוקול-AI</span> - סביבת עבודה משפטית מסווגת</h1>
 <p class="gsub">הירשם כעת וקבל 3 קבצים ראשונים לניתוח ללא עלות</p>
 <form class="gform" id="gF" novalidate>
-<div class="gtabs" role="tablist"><button type="button" id="tReg" class="on">הרשמה</button><button type="button" id="tLog">התחברות</button></div>
+<div class="gtabs" role="tablist"><button type="button" id="tReg" class="on" onclick="switchTab('login')">התחברות</button><button type="button" id="tLog" onclick="switchTab('register')">הרשמה</button></div>
+   <div id="login-container">
 <div class="gfld" id="nameF"><label for="gName">שם מלא</label><input id="gName" type="text" autocomplete="name"></div>
 <div class="gfld"><label for="gMail">דוא"ל</label><input id="gMail" type="email" autocomplete="email" spellcheck="false"></div>
 <div class="gfld" id="passF"><label for="gPass">סיסמה</label><input id="gPass" type="password" autocomplete="current-password" spellcheck="false"><div class="ghint" id="pHint">הסיסמה חייבת להכיל לפחות 8 תווים, אותיות ומספרים</div></div>
 <div class="gerr" id="gErr" role="alert"></div>
 <div class="glinks"><button type="button" class="glink" id="forgotL" hidden>שכחתי סיסמה?</button><button type="button" class="glink" id="backL" hidden>חזרה להתחברות</button></div>
 <button class="btn gold xl" id="gSubmit" type="submit">כניסה למערכת</button>
+      </div>
+   <!-- אזור הרשמה מופרד ומאובטח (שלב 2) -->
+<div id="register-container" class="hidden" style="display: none;">
+  <div class="gfld" id="regNameF">
+    <label for="regName">שם מלא</label>
+    <input id="regName" type="text" autocomplete="name">
+  </div>
+  <div class="gfld" id="regMailF">
+    <label for="regMail">דוא"ל מקצועי</label>
+    <input id="regMail" type="email" autocomplete="email" spellcheck="false">
+  </div>
+  <div class="gfld" id="regPassF">
+    <label for="regPass">סיסמה (לפחות 6 תווים)</label>
+    <input id="regPass" type="password" autocomplete="new-password">
+  </div>
+  <button class="btn gold xl" id="gRegisterSubmit" type="button" onclick="handleRegister(event)" style="width:100%; margin-top:12px;">הרשמה ומעבר לניתוח</button>
+</div>
 </form>
 <div class="gfoot">הגישה מיועדת לאנשי מקצוע בתחום המשפט.</div>
 </div></div>
@@ -608,6 +626,49 @@ input.addEventListener('change',()=>handle(input.files[0]));
 ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('over')}));
 ['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('over')}));
 drop.addEventListener('drop',e=>handle(e.dataTransfer.files[0]));
+   // 1. פונקציית מעבר חלק ודינמי בין הטפסים
+window.switchTab = function(tab) {
+    const loginCont = document.getElementById('login-container');
+    const registerCont = document.getElementById('register-container');
+    const tabLogin = document.getElementById('tReg'); 
+    const tabRegister = document.getElementById('tLog'); 
+    
+    if (tab === 'login') {
+        loginCont.style.display = 'block';
+        registerCont.style.display = 'none';
+        tabLogin.classList.add('on');
+        tabRegister.classList.remove('on');
+    } else {
+        loginCont.style.display = 'none';
+        registerCont.style.display = 'block';
+        tabRegister.classList.add('on');
+        tabLogin.classList.remove('on');
+    }
+}
+
+// 2. פונקציית הרשמה מאובטחת מול סופאבייס (מופעלת משורה 310 שלך)
+window.handleRegister = async function(event) {
+    event.preventDefault();
+    if (!supabase) return alert('המערכת באתחול, אנא נסה שוב בעוד רגע.');
+    
+    const email = document.getElementById('regMail').value;
+    const password = document.getElementById('regPass').value;
+    const submitBtn = document.getElementById('gRegisterSubmit');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'מבצע הרשמה...';
+    
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    
+    if (error) {
+        alert('שגיאה בתהליך ההרשמה: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'הרשמה ומעבר לניתוח';
+    } else {
+        alert('ההרשמה בוצעה בהצלחה! כעת תוכל להתחבר עם פרטים אלו.');
+        window.switchTab('login');
+    }
+}
 </script>
 </body>
 </html>
